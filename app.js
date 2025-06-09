@@ -41,6 +41,7 @@ const client = new Client({
 // WhatsApp client status
 let clientReady = false;
 let qrCodeGenerated = false;
+let currentQRCode = '';
 
 // Generate QR Code
 client.on('qr', (qr) => {
@@ -335,4 +336,105 @@ process.on('SIGINT', async () => {
     console.log('\n🛑 Shutting down WhatsApp API...');
     await client.destroy();
     process.exit();
+});
+
+// Add this to your app.js after the existing imports
+const QRCode = require('qrcode');
+
+// Modify the existing QR event handler
+client.on('qr', async (qr) => {
+    console.log('\n=== QR CODE GENERATED ===');
+    console.log('Visit https://your-app.railway.app/qr to scan the QR code');
+    
+    currentQRCode = qr;
+    qrCodeGenerated = true;
+    
+    // Still generate terminal QR for backup
+    qrcode.generate(qr, { small: true });
+});
+
+// Add new route to display QR code on web page
+app.get('/qr', async (req, res) => {
+    if (!currentQRCode) {
+        return res.send(`
+            <html>
+                <head><title>WhatsApp QR Code</title></head>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h2>⏳ Waiting for QR Code...</h2>
+                    <p>QR code is being generated. Please refresh in a few seconds.</p>
+                    <button onclick="location.reload()">Refresh</button>
+                </body>
+            </html>
+        `);
+    }
+
+    try {
+        // Generate QR code as image
+        const qrImage = await QRCode.toDataURL(currentQRCode, {
+            width: 300,
+            margin: 2
+        });
+
+        res.send(`
+            <html>
+                <head>
+                    <title>WhatsApp QR Code</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                </head>
+                <body style="font-family: Arial; text-align: center; padding: 20px; background: #f5f5f5;">
+                    <div style="background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <h2 style="color: #25D366; margin-top: 0;">📱 Scan with WhatsApp</h2>
+                        <img src="${qrImage}" alt="WhatsApp QR Code" style="border: 2px solid #25D366; border-radius: 10px;">
+                        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+                            <p><strong>Instructions:</strong></p>
+                            <p>1. Open WhatsApp on your phone</p>
+                            <p>2. Go to Settings → Linked Devices</p>
+                            <p>3. Tap "Link a Device"</p>
+                            <p>4. Scan this QR code</p>
+                        </div>
+                        <button onclick="location.reload()" style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 15px; cursor: pointer;">
+                            Refresh QR Code
+                        </button>
+                    </div>
+                    <script>
+                        // Auto refresh every 30 seconds
+                        setTimeout(() => location.reload(), 30000);
+                    </script>
+                </body>
+            </html>
+        `);
+    } catch (error) {
+        res.send(`
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h2>❌ Error generating QR code</h2>
+                    <p>${error.message}</p>
+                    <button onclick="location.reload()">Try Again</button>
+                </body>
+            </html>
+        `);
+    }
+});
+
+// Add status endpoint that includes QR info
+app.get('/api/status', (req, res) => {
+    res.json({
+        status: clientReady ? 'ready' : 'not ready',
+        qrGenerated: qrCodeGenerated,
+        ready: clientReady,
+        qrAvailable: !!currentQRCode
+    });
+});
+
+// Clear QR code when authenticated
+client.on('authenticated', () => {
+    console.log('✅ WhatsApp authenticated successfully');
+    currentQRCode = ''; // Clear QR code after successful auth
+});
+
+client.on('ready', () => {
+    console.log('\n✅ WhatsApp is ready!');
+    console.log('🌐 Your webhook URL: https://your-app.railway.app/webhook/fluent-forms');
+    clientReady = true;
+    currentQRCode = ''; // Clear QR code when ready
 });
