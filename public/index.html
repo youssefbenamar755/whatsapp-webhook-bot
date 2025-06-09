@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp API - Small Business</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #075E54;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            background: #DCF8C6;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status.ready {
+            background: #DCF8C6;
+            color: #075E54;
+        }
+
+        .status.not-ready {
+            background: #FFE5E5;
+            color: #D32F2F;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #075E54;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: #25D366;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #128C7E;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #075E54;
+        }
+
+        .btn-secondary:hover {
+            background: #054139;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .message.success {
+            background: #DCF8C6;
+            color: #075E54;
+            border: 1px solid #25D366;
+        }
+
+        .message.error {
+            background: #FFE5E5;
+            color: #D32F2F;
+            border: 1px solid #f44336;
+        }
+
+        .instructions {
+            background: #E3F2FD;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .chat-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .chat-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-item:hover {
+            background: #f5f5f5;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            color: #075E54;
+            margin-bottom: 5px;
+        }
+
+        .chat-message {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .tips {
+            background: #FFF3E0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #FF9800;
+        }
+
+        .tips h3 {
+            color: #F57C00;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 WhatsApp API</h1>
+            <p>Simple messaging for your business</p>
+        </div>
+
+        <div class="status" id="status">
+            <strong>Status:</strong> <span id="statusText">Checking...</span>
+        </div>
+
+        <div class="main-content">
+            <div class="instructions">
+                <h3>🚀 Getting Started</h3>
+                <ol>
+                    <li>Make sure the server is running in your terminal</li>
+                    <li>Scan the QR code with your WhatsApp (if shown in terminal)</li>
+                    <li>Wait for "Ready" status above</li>
+                    <li>Start sending messages!</li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>💬 Send Message</h2>
+                <form id="messageForm">
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number (with country code)</label>
+                        <input type="text" id="phoneNumber" placeholder="e.g., +1234567890 or 1234567890" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="messageText">Message</label>
+                        <textarea id="messageText" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="sendBtn">Send Message</button>
+                </form>
+            </div>
+
+            <div id="messageResult" class="message"></div>
+
+            <div class="section">
+                <h2>📋 Recent Chats</h2>
+                <button type="button" class="btn btn-secondary" onclick="loadChats()">Load Recent Chats</button>
+                <div id="chatList" class="chat-list" style="display: none;"></div>
+            </div>
+
+            <div class="tips">
+                <h3>💡 Tips</h3>
+                <ul>
+                    <li><strong>Phone Numbers:</strong> Include country code (e.g., +1 for US, +91 for India)</li>
+                    <li><strong>Keep Running:</strong> Don't close the terminal while using the API</li>
+                    <li><strong>QR Code:</strong> You'll need to scan QR code each time you restart</li>
+                    <li><strong>Rate Limits:</strong> Don't send messages too quickly to avoid being blocked</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isReady = false;
+
+        // Check status on page load
+        checkStatus();
+        setInterval(checkStatus, 5000); // Check every 5 seconds
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('status');
+                const statusText = document.getElementById('statusText');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                if (data.ready) {
+                    isReady = true;
+                    statusElement.className = 'status ready';
+                    statusText.textContent = '✅ Ready - You can send messages!';
+                    sendBtn.disabled = false;
+                } else if (data.qrGenerated) {
+                    isReady = false;
+                    statusElement.className = 'status not-ready';
+                    statusText.textContent = '📱 Please scan QR code in terminal';
+                    sendBtn.disabled = true;
+                } else {
+                    isReady = false;
+                    statusElement.className = 'status not-ready';
+                    statusText.textContent = '⚠️ Starting up... Check terminal';
+                    sendBtn.disabled = true;
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+                const statusElement = document.getElementById('status');
+                const statusText = document.getElementById('statusText');
+                statusElement.className = 'status not-ready';
+                statusText.textContent = '❌ Server connection failed';
+            }
+        }
+
+        // Handle message form submission
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!isReady) {
+                showMessage('WhatsApp is not ready. Please scan QR code first.', 'error');
+                return;
+            }
+
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const messageText = document.getElementById('messageText').value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (!phoneNumber || !messageText) {
+                showMessage('Please fill in both phone number and message.', 'error');
+                return;
+            }
+
+            // Disable button during sending
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+                const response = await fetch('/api/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        number: phoneNumber,
+                        message: messageText
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('✅ Message sent successfully!', 'success');
+                    document.getElementById('messageText').value = ''; // Clear message
+                } else {
+                    showMessage('❌ Failed to send message: ' + data.error, 'error');
+                }
+
+            } catch (error) {
+                showMessage('❌ Network error: ' + error.message, 'error');
+                console.error('Send message error:', error);
+            }
+
+            // Re-enable button
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Message';
+        });
+
+        async function loadChats() {
+            if (!isReady) {
+                showMessage('WhatsApp is not ready. Please scan QR code first.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/chats');
+                const data = await response.json();
+
+                if (data.success) {
+                    const chatList = document.getElementById('chatList');
+                    chatList.innerHTML = '';
+                    
+                    if (data.chats.length === 0) {
+                        chatList.innerHTML = '<div class="chat-item">No recent chats found</div>';
+                    } else {
+                        data.chats.forEach(chat => {
+                            const chatItem = document.createElement('div');
+                            chatItem.className = 'chat-item';
+                            chatItem.onclick = () => {
+                                // You could implement click to fill phone number
+                                console.log('Chat clicked:', chat);
+                            };
+                            
+                            chatItem.innerHTML = `
+                                <div class="chat-name">${chat.name || 'Unknown'} ${chat.isGroup ? '(Group)' : ''}</div>
+                                <div class="chat-message">${chat.lastMessage}</div>
+                            `;
+                            
+                            chatList.appendChild(chatItem);
+                        });
+                    }
+                    
+                    chatList.style.display = 'block';
+                    showMessage('✅ Chats loaded successfully!', 'success');
+                } else {
+                    showMessage('❌ Failed to load chats: ' + data.error, 'error');
+                }
+
+            } catch (error) {
+                showMessage('❌ Failed to load chats: ' + error.message, 'error');
+                console.error('Load chats error:', error);
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('messageResult');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Auto-focus phone number field when ready
+        setInterval(() => {
+            if (isReady && document.getElementById('phoneNumber').value === '') {
+                document.getElementById('phoneNumber').focus();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
